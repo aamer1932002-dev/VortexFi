@@ -7,7 +7,7 @@ import { Stats } from '@/components/sections/Stats';
 import { Footer } from '@/components/layout/Footer';
 import { ParticleBackground } from '@/components/effects/ParticleBackground';
 import Link from 'next/link';
-import { ArrowRight, Wallet, PieChart, BookOpen, History, Zap, Shield, Coins } from 'lucide-react';
+import { ArrowRight, Wallet, PieChart, BookOpen, History, Zap, Shield, Coins, BarChart2, GitBranch } from 'lucide-react';
 
 const features = [
   {
@@ -37,6 +37,20 @@ const features = [
     description: 'Learn about AggLayer technology and our chainless approach',
     href: '/how-it-works',
     gradient: 'from-orange-500 to-amber-500',
+  },
+  {
+    icon: BarChart2,
+    title: 'Analytics',
+    description: 'Live protocol stats, TVL charts, volume history and vault APY comparison',
+    href: '/analytics',
+    gradient: 'from-purple-500 to-indigo-500',
+  },
+  {
+    icon: GitBranch,
+    title: 'Bridge',
+    description: 'Track cross-chain message flows and your bridge transaction history',
+    href: '/bridge',
+    gradient: 'from-blue-500 to-cyan-500',
   },
 ];
 
@@ -96,7 +110,7 @@ export default function Home() {
                 </p>
               </motion.div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {features.map((feature, i) => (
                   <motion.div
                     key={feature.title}
