@@ -1,0 +1,16 @@
+{
+  "amoy": {
+    "network": "amoy",
+    "chainId": 80002,
+    "timestamp": "2025-12-11T05:36:56.614Z",
+    "contracts": {
+      "MockUSDC": "0x52e5E849e23C763be6A1BdB509f11Da1c212e7a2",
+      "MockWETH": "0xf2a2Ff159744C7Fc9b06cB52c5e06a63536956fC",
+      "ZapLP": "0x828fcF4603c201844fdD2DE6D00E76E2097e9f11",
+      "MockPool": "0x9CC0D4B6f3cF20a8c541C716BF8646c9d562373a",
+      "ZapSender": "0xE78E6788807c8C3Dbf3d06711d8C525a3C04C474",
+      "ZapReceiver": "0x0487348876b6cA34F3CCF1459386f2D6e638be8c",
+      "Bridge": "0x528e26b25a34a4A5d0dbDa1d57D318153d2ED582"
+    }
+  }
+}

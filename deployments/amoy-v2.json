@@ -1,0 +1,24 @@
+{
+  "network": "amoy",
+  "chainId": "80002",
+  "timestamp": "2026-02-13T09:00:15.647Z",
+  "version": "V2",
+  "contracts": {
+    "MockUSDC": "0xb111df4e3e4FAC338f16299B7feA32E76C3Ea39B",
+    "MockWETH": "0x0FbDB1a56092a821D5bF6FcC31055FfA058B293b",
+    "ZapLP": "0x819BC2DEbCf5f3A554c8Cbb6a204410c3B520272",
+    "MockPool": "0xf18606D934e052F0b2A07e9D6C135DC6097412fD",
+    "ZapSenderV2": "0xC9A79289b95Ba1728348D89C3f99E75A19939777",
+    "ZapReceiverV2": "0x9AB03AeefC2740C6a704d4640504F68A1b3a8565",
+    "StableYieldVaultV2": "0xA80811e188B78A62448Dd8C5AE31b0Ce3Ed11a58",
+    "LiquidStakingVaultV2": "0x1234a3436f126eCCc55f36feA6DbB0432743625F",
+    "Bridge": "0x528e26b25a34a4A5d0dbDa1d57D318153d2ED582"
+  },
+  "features": {
+    "emergencyPause": true,
+    "slippageProtection": true,
+    "withdrawalFlow": true,
+    "autoCompound": true,
+    "multiVaultZapping": true
+  }
+}

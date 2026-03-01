@@ -1,0 +1,29 @@
+{
+  "name": "vortexfi",
+  "version": "1.0.0",
+  "description": "VortexFi - Spin Up Yield Across Any Chain powered by Polygon AggLayer",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:amoy": "hardhat run scripts/deploy_sender.ts --network amoy",
+    "deploy:cardona": "hardhat run scripts/deploy_receiver.ts --network cardona",
+    "zap": "hardhat run scripts/zap.ts --network amoy",
+    "deploy:all": "hardhat run scripts/deploy_and_zap.ts"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@nomicfoundation/hardhat-ethers": "^3.0.5",
+    "@typechain/ethers-v6": "^0.5.1",
+    "@typechain/hardhat": "^9.1.0",
+    "@types/node": "^20.10.0",
+    "ethers": "^6.9.0",
+    "hardhat": "^2.19.2",
+    "ts-node": "^10.9.2",
+    "typechain": "^8.3.2",
+    "typescript": "^5.3.2"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.1",
+    "dotenv": "^16.3.1"
+  }
+}
