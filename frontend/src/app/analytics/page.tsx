@@ -223,7 +223,7 @@ export default function AnalyticsPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                   <XAxis dataKey="date" tick={{ fill: '#6b7280', fontSize: 11 }} tickLine={false} axisLine={false} interval={6} />
                   <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v}`} />
-                  <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [`$${v.toLocaleString('en-US', { maximumFractionDigits: 2 })}`, 'TVL']} />
+                  <Tooltip contentStyle={tooltipStyle} formatter={(v: unknown) => { const n = Number(v ?? 0); return [`$${n.toLocaleString('en-US', { maximumFractionDigits: 2 })}`, 'TVL']; }} />
                   <Area type="monotone" dataKey="tvl" stroke="#8b5cf6" strokeWidth={2} fill="url(#tvlGrad)" dot={false} />
                 </AreaChart>
               </ResponsiveContainer>
@@ -256,7 +256,7 @@ export default function AnalyticsPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                   <XAxis dataKey="date" tick={{ fill: '#6b7280', fontSize: 11 }} tickLine={false} axisLine={false} interval={6} />
                   <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v}`} />
-                  <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [`$${v.toFixed(2)}`, 'Volume']} />
+                  <Tooltip contentStyle={tooltipStyle} formatter={(v: unknown) => { const n = Number(v ?? 0); return [`$${n.toFixed(2)}`, 'Volume']; }} />
                   <Bar dataKey="volume" fill="url(#volGrad)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -279,7 +279,7 @@ export default function AnalyticsPage() {
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
                     <XAxis type="number" tick={{ fill: '#6b7280', fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} />
                     <YAxis type="category" dataKey="name" tick={{ fill: '#d1d5db', fontSize: 11 }} tickLine={false} axisLine={false} width={110} />
-                    <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [`${v}%`, 'APY']} />
+                    <Tooltip contentStyle={tooltipStyle} formatter={(v: unknown) => [`${Number(v ?? 0)}%`, 'APY']} />
                     <Bar dataKey="apy" radius={[0, 6, 6, 0]}>
                       {vaultApyData.map((entry, i) => {
                         const riskColor = entry.risk === 'Low' ? '#22c55e' : entry.risk === 'Medium' ? '#f59e0b' : '#ef4444';
@@ -319,7 +319,7 @@ export default function AnalyticsPage() {
                         <Cell key={i} fill={entry.color} fillOpacity={0.85} />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [`$${v.toLocaleString('en-US', { maximumFractionDigits: 2 })}`, '']} />
+                    <Tooltip contentStyle={tooltipStyle} formatter={(v: unknown) => { const n = Number(v ?? 0); return [`$${n.toLocaleString('en-US', { maximumFractionDigits: 2 })}`, '']; }} />
                     <Legend formatter={(value) => <span style={{ color: '#9ca3af', fontSize: 13 }}>{value}</span>} />
                   </PieChart>
                 </ResponsiveContainer>
