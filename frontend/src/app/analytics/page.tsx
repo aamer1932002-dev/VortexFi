@@ -5,53 +5,12 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { ParticleBackground } from '@/components/effects/ParticleBackground';
 import {
-  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
+  BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
 import { useTotalTVL, useZapStats, useLPTotalSupply } from '@/hooks/useContracts';
 import { VAULTS, formatAmount } from '@/lib/config';
-import { BarChart2, TrendingUp, Zap, Layers, RefreshCw } from 'lucide-react';
-import { useMemo } from 'react';
-
-// ─── helpers ─────────────────────────────────────────────────────────────────
-
-/** Build a simulated 30-day TVL series ending at `currentTvl` */
-function buildTvlHistory(currentTvl: number) {
-  const days = 30;
-  const seed = 42;
-  const result = [];
-  // walk backwards: start from ~30 % of current value, trend up
-  for (let i = 0; i < days; i++) {
-    const progress = i / (days - 1);
-    // pseudo-noise using sine waves (deterministic so it doesn't flicker)
-    const noise = Math.sin(seed + i * 1.3) * 0.07 + Math.cos(seed + i * 0.9) * 0.04;
-    const base = currentTvl * (0.3 + 0.7 * progress);
-    const value = Math.max(0, base * (1 + noise));
-    const date = new Date();
-    date.setDate(date.getDate() - (days - 1 - i));
-    result.push({
-      date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      tvl: parseFloat(value.toFixed(2)),
-    });
-  }
-  return result;
-}
-
-/** Build a simulated 30-day volume series */
-function buildVolumeHistory(totalVolume: number) {
-  const days = 30;
-  const seed = 17;
-  return Array.from({ length: days }, (_, i) => {
-    const noise = (Math.sin(seed + i * 2.1) * 0.5 + 0.5); // 0–1
-    const dayVol = (totalVolume / days) * (0.2 + noise * 1.6);
-    const date = new Date();
-    date.setDate(date.getDate() - (days - 1 - i));
-    return {
-      date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      volume: parseFloat(dayVol.toFixed(2)),
-    };
-  });
-}
+import { BarChart2, TrendingUp, Zap, Layers, RefreshCw, Database } from 'lucide-react';
 
 // custom tooltip shared styles
 const tooltipStyle = {
@@ -71,11 +30,9 @@ export default function AnalyticsPage() {
 
   const isLoading = tvlLoading || statsLoading || lpLoading;
 
-  const tvlHistory = useMemo(() => buildTvlHistory(totalTvlUsd || 10000), [totalTvlUsd]);
-  const volumeHistory = useMemo(
-    () => buildVolumeHistory(parseFloat(stats?.totalVolume ?? '0') || 5000),
-    [stats?.totalVolume]
-  );
+  const usdcTvlNum = parseFloat(usdcTvl) || 0;
+  const wethTvlUsd = (parseFloat(wethTvl) || 0) * 2000;
+  const totalVolume = parseFloat(stats?.totalVolume ?? '0') || 0;
 
   const vaultApyData = VAULTS.map((v) => ({
     name: v.name.replace('VortexFi ', '').replace(' Vault', ''),
@@ -84,8 +41,8 @@ export default function AnalyticsPage() {
   }));
 
   const tvlPieData = [
-    { name: 'USDC', value: parseFloat(usdcTvl) || 0, color: '#22c55e' },
-    { name: 'WETH (×$2k)', value: (parseFloat(wethTvl) || 0) * 2000, color: '#3b82f6' },
+    { name: 'USDC', value: usdcTvlNum, color: '#22c55e' },
+    { name: 'WETH (×$2k)', value: wethTvlUsd, color: '#3b82f6' },
   ];
 
   // summary stat cards
@@ -196,7 +153,7 @@ export default function AnalyticsPage() {
               })}
             </div>
 
-            {/* ── TVL Chart ── */}
+            {/* ── Live TVL Snapshot ── */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -206,30 +163,64 @@ export default function AnalyticsPage() {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-lg font-bold text-white">Total Value Locked</h2>
-                  <p className="text-xs text-gray-500">30-day estimated trend · live endpoint = current value</p>
+                  <p className="text-xs text-gray-500">Live on-chain pool balances · updated every block</p>
                 </div>
                 <div className="text-2xl font-bold text-purple-400">
-                  ${isLoading ? '…' : formatAmount(totalTvlUsd)}
+                  {isLoading ? '…' : `$${formatAmount(totalTvlUsd)}`}
                 </div>
               </div>
-              <ResponsiveContainer width="100%" height={240}>
-                <AreaChart data={tvlHistory} margin={{ top: 5, right: 10, bottom: 0, left: 10 }}>
-                  <defs>
-                    <linearGradient id="tvlGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                  <XAxis dataKey="date" tick={{ fill: '#6b7280', fontSize: 11 }} tickLine={false} axisLine={false} interval={6} />
-                  <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v}`} />
-                  <Tooltip contentStyle={tooltipStyle} formatter={(v: unknown) => { const n = Number(v ?? 0); return [`$${n.toLocaleString('en-US', { maximumFractionDigits: 2 })}`, 'TVL']; }} />
-                  <Area type="monotone" dataKey="tvl" stroke="#8b5cf6" strokeWidth={2} fill="url(#tvlGrad)" dot={false} />
-                </AreaChart>
-              </ResponsiveContainer>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Total TVL */}
+                <div className="p-5 bg-purple-500/10 border border-purple-500/20 rounded-2xl flex flex-col gap-2">
+                  <div className="text-xs text-gray-400">Total TVL (USD)</div>
+                  <div className="text-3xl font-bold text-purple-400">
+                    {tvlLoading ? '…' : `$${formatAmount(totalTvlUsd)}`}
+                  </div>
+                  <div className="text-xs text-gray-500">USDC + WETH combined</div>
+                </div>
+                {/* USDC */}
+                <div className="p-5 bg-green-500/10 border border-green-500/20 rounded-2xl flex flex-col gap-2">
+                  <div className="text-xs text-gray-400">USDC in Pool</div>
+                  <div className="text-3xl font-bold text-green-400">
+                    {tvlLoading ? '…' : formatAmount(usdcTvlNum)}
+                  </div>
+                  <div className="text-xs text-gray-500">Raw on-chain balance</div>
+                </div>
+                {/* WETH */}
+                <div className="p-5 bg-blue-500/10 border border-blue-500/20 rounded-2xl flex flex-col gap-2">
+                  <div className="text-xs text-gray-400">WETH in Pool</div>
+                  <div className="text-3xl font-bold text-blue-400">
+                    {tvlLoading ? '…' : `${parseFloat(wethTvl).toFixed(4)} WETH`}
+                  </div>
+                  <div className="text-xs text-gray-500">≈ ${tvlLoading ? '…' : formatAmount(wethTvlUsd)} USD</div>
+                </div>
+              </div>
+
+              {/* TVL bar showing USDC vs WETH proportions */}
+              {!tvlLoading && totalTvlUsd > 0 && (
+                <div className="mt-6">
+                  <div className="flex justify-between text-xs text-gray-500 mb-1">
+                    <span>USDC {totalTvlUsd > 0 ? ((usdcTvlNum / totalTvlUsd) * 100).toFixed(1) : 0}%</span>
+                    <span>WETH {totalTvlUsd > 0 ? ((wethTvlUsd / totalTvlUsd) * 100).toFixed(1) : 0}%</span>
+                  </div>
+                  <div className="w-full h-3 rounded-full bg-white/5 overflow-hidden flex">
+                    <div
+                      className="h-full bg-green-500 transition-all duration-700"
+                      style={{ width: `${totalTvlUsd > 0 ? (usdcTvlNum / totalTvlUsd) * 100 : 50}%` }}
+                    />
+                    <div className="h-full bg-blue-500 flex-1" />
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-4 flex items-center gap-2 text-xs text-gray-600">
+                <Database className="w-3 h-3" />
+                Historical charts require an on-chain indexer — showing live snapshot only
+              </div>
             </motion.div>
 
-            {/* ── Volume Chart ── */}
+            {/* ── Protocol Activity ── */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -238,28 +229,49 @@ export default function AnalyticsPage() {
             >
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-lg font-bold text-white">Daily Volume</h2>
-                  <p className="text-xs text-gray-500">30-day estimated distribution of all-time volume</p>
-                </div>
-                <div className="text-2xl font-bold text-cyan-400">
-                  ${statsLoading ? '…' : formatAmount(parseFloat(stats?.totalVolume ?? '0'))}
+                  <h2 className="text-lg font-bold text-white">Protocol Activity</h2>
+                  <p className="text-xs text-gray-500">All-time stats read directly from ZapSender contract</p>
                 </div>
               </div>
-              <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={volumeHistory} margin={{ top: 5, right: 10, bottom: 0, left: 10 }}>
-                  <defs>
-                    <linearGradient id="volGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.9} />
-                      <stop offset="95%" stopColor="#06b6d4" stopOpacity={0.3} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                  <XAxis dataKey="date" tick={{ fill: '#6b7280', fontSize: 11 }} tickLine={false} axisLine={false} interval={6} />
-                  <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v}`} />
-                  <Tooltip contentStyle={tooltipStyle} formatter={(v: unknown) => { const n = Number(v ?? 0); return [`$${n.toFixed(2)}`, 'Volume']; }} />
-                  <Bar dataKey="volume" fill="url(#volGrad)" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-5 bg-cyan-500/10 border border-cyan-500/20 rounded-2xl flex flex-col gap-2">
+                  <div className="text-xs text-gray-400">All-Time Volume</div>
+                  <div className="text-3xl font-bold text-cyan-400">
+                    {statsLoading ? '…' : `$${formatAmount(totalVolume)}`}
+                  </div>
+                  <div className="text-xs text-gray-500">Cumulative zap volume (USDC)</div>
+                </div>
+                <div className="p-5 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl flex flex-col gap-2">
+                  <div className="text-xs text-gray-400">Total Zap Transactions</div>
+                  <div className="text-3xl font-bold text-yellow-400">
+                    {statsLoading ? '…' : (stats?.totalZaps ?? 0).toLocaleString()}
+                  </div>
+                  <div className="text-xs text-gray-500">Cross-chain zaps executed</div>
+                </div>
+                <div className="p-5 bg-pink-500/10 border border-pink-500/20 rounded-2xl flex flex-col gap-2">
+                  <div className="text-xs text-gray-400">zapLP Total Supply</div>
+                  <div className="text-3xl font-bold text-pink-400">
+                    {lpLoading ? '…' : parseFloat(totalSupply).toLocaleString('en-US', { maximumFractionDigits: 2 })}
+                  </div>
+                  <div className="text-xs text-gray-500">LP tokens outstanding</div>
+                </div>
+              </div>
+
+              {/* Avg volume per zap */}
+              {!statsLoading && (stats?.totalZaps ?? 0) > 0 && (
+                <div className="mt-4 p-4 bg-white/5 rounded-xl flex items-center justify-between text-sm">
+                  <span className="text-gray-400">Average volume per zap</span>
+                  <span className="font-bold text-white">
+                    ${formatAmount(totalVolume / (stats?.totalZaps ?? 1))} USDC
+                  </span>
+                </div>
+              )}
+
+              <div className="mt-4 flex items-center gap-2 text-xs text-gray-600">
+                <Database className="w-3 h-3" />
+                Per-day breakdown requires an on-chain indexer — showing cumulative totals only
+              </div>
             </motion.div>
 
             {/* ── APY + Pie side-by-side ── */}
@@ -328,7 +340,7 @@ export default function AnalyticsPage() {
                 <div className="grid grid-cols-2 gap-3 mt-4">
                   <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-xl">
                     <div className="text-xs text-gray-400 mb-1">USDC in Pool</div>
-                    <div className="font-bold text-green-400">{tvlLoading ? '…' : formatAmount(usdcTvl)} USDC</div>
+                    <div className="font-bold text-green-400">{tvlLoading ? '…' : formatAmount(usdcTvlNum)} USDC</div>
                   </div>
                   <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
                     <div className="text-xs text-gray-400 mb-1">WETH in Pool</div>

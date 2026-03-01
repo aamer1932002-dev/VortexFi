@@ -6,7 +6,7 @@ import { Footer } from '@/components/layout/Footer';
 import Portfolio from '@/components/Portfolio';
 import { ParticleBackground } from '@/components/effects/ParticleBackground';
 import { PieChart, TrendingUp, Wallet, ArrowUpRight, DollarSign } from 'lucide-react';
-import { useUSDCBalance, useWETHBalance, useLPBalance, useUserDeposits } from '@/hooks/useContracts';
+import { useUSDCBalance, useWETHBalance, useLPBalance } from '@/hooks/useContracts';
 import { useAccount } from 'wagmi';
 
 export default function PortfolioPage() {
@@ -14,47 +14,42 @@ export default function PortfolioPage() {
   const { balance: usdcBalance, isLoading: usdcLoading } = useUSDCBalance();
   const { balance: wethBalance, isLoading: wethLoading } = useWETHBalance();
   const { balance: lpBalance, isLoading: lpLoading } = useLPBalance();
-  const { deposits: userDeposits, isLoading: depositsLoading } = useUserDeposits();
 
-  const isLoading = usdcLoading || wethLoading || lpLoading || depositsLoading;
+  const isLoading = usdcLoading || wethLoading || lpLoading;
 
   const usdc = parseFloat(usdcBalance) || 0;
   const weth = parseFloat(wethBalance) || 0;
   const lp   = parseFloat(lpBalance)   || 0;
-  const deposited = parseFloat(userDeposits) || 0;
-
-  // Rough USD total: USDC at $1, WETH at $2000, LP tokens at $1 each
-  const totalBalance = usdc + weth * 2000 + lp;
-  const earnings = Math.max(0, totalBalance - deposited);
 
   // Count non-zero token balances as "active positions"
   const activePositions = (usdc > 0 ? 1 : 0) + (weth > 0 ? 1 : 0) + (lp > 0 ? 1 : 0);
 
   const fmt = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtToken = (n: number, dec = 4) => n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: dec });
 
   const portfolioStats = [
     {
-      label: 'Total Balance',
-      value: isLoading || !isConnected ? '—' : `$${fmt(totalBalance)}`,
-      change: 'Live from chain',
+      label: 'USDC Balance',
+      value: isLoading || !isConnected ? '—' : `${fmt(usdc)}`,
+      change: 'Wallet · live',
       icon: DollarSign,
     },
     {
-      label: 'Total Deposited',
-      value: isLoading || !isConnected ? '—' : `$${fmt(deposited)}`,
-      change: 'Pool deposits',
+      label: 'WETH Balance',
+      value: isLoading || !isConnected ? '—' : `${fmtToken(weth)} WETH`,
+      change: 'Wallet · live',
       icon: TrendingUp,
     },
     {
-      label: 'Total Earnings',
-      value: isLoading || !isConnected ? '—' : `$${fmt(earnings)}`,
-      change: 'Est. yield',
+      label: 'LP Token Balance',
+      value: isLoading || !isConnected ? '—' : `${fmtToken(lp)} zapLP`,
+      change: 'Pool position',
       icon: ArrowUpRight,
     },
     {
       label: 'Active Positions',
       value: isLoading || !isConnected ? '—' : String(activePositions),
-      change: 'Tokens held',
+      change: 'Non-zero tokens',
       icon: Wallet,
     },
   ];
