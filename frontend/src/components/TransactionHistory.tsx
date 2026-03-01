@@ -2,8 +2,9 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import { useAccount } from 'wagmi';
 
-interface Transaction {
+export interface Transaction {
   id: string;
   type: 'deposit' | 'withdraw' | 'bridge' | 'claim';
   status: 'pending' | 'bridging' | 'completed' | 'failed';
@@ -13,61 +14,19 @@ interface Transaction {
   amount: string;
   vault?: string;
   txHash: string;
-  timestamp: Date;
+  timestamp: string; // ISO string for localStorage serialization
   lpReceived?: string;
+  walletAddress?: string;
 }
 
-// Mock transaction data - replace with real data from subgraph/events
-const mockTransactions: Transaction[] = [
-  {
-    id: '1',
-    type: 'deposit',
-    status: 'completed',
-    sourceChain: 'Ethereum',
-    destChain: 'Polygon zkEVM',
-    token: 'USDC',
-    amount: '1,000',
-    vault: 'Stable Yield',
-    txHash: '0x1234...5678',
-    timestamp: new Date(Date.now() - 3600000),
-    lpReceived: '998.5',
-  },
-  {
-    id: '2',
-    type: 'deposit',
-    status: 'bridging',
-    sourceChain: 'Arbitrum',
-    destChain: 'Polygon zkEVM',
-    token: 'ETH',
-    amount: '0.5',
-    vault: 'Liquid Staking',
-    txHash: '0xabcd...efgh',
-    timestamp: new Date(Date.now() - 1800000),
-  },
-  {
-    id: '3',
-    type: 'withdraw',
-    status: 'completed',
-    sourceChain: 'Polygon zkEVM',
-    destChain: 'Ethereum',
-    token: 'USDC',
-    amount: '500',
-    txHash: '0x9876...5432',
-    timestamp: new Date(Date.now() - 86400000),
-  },
-  {
-    id: '4',
-    type: 'deposit',
-    status: 'pending',
-    sourceChain: 'Optimism',
-    destChain: 'Polygon zkEVM',
-    token: 'USDC',
-    amount: '2,500',
-    vault: 'Delta Neutral',
-    txHash: '0xijkl...mnop',
-    timestamp: new Date(),
-  },
-];
+export function saveTransaction(tx: Omit<Transaction, 'id' | 'timestamp'>) {
+  try {
+    const stored = localStorage.getItem('vortexfi_transactions');
+    const existing: Transaction[] = stored ? JSON.parse(stored) : [];
+    const newTx: Transaction = { ...tx, id: Date.now().toString(), timestamp: new Date().toISOString() };
+    localStorage.setItem('vortexfi_transactions', JSON.stringify([newTx, ...existing].slice(0, 50)));
+  } catch {}
+}
 
 const statusColors = {
   pending: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
@@ -91,9 +50,29 @@ const typeIcons = {
 };
 
 export default function TransactionHistory() {
-  const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions);
+  const { address } = useAccount();
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Load transactions from localStorage on mount and when address changes
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('vortexfi_transactions');
+      if (stored) {
+        const all: Transaction[] = JSON.parse(stored);
+        // If wallet connected, show only that wallet's txs; otherwise show all
+        const filtered = address
+          ? all.filter((tx) => !tx.walletAddress || tx.walletAddress.toLowerCase() === address.toLowerCase())
+          : all;
+        setTransactions(filtered);
+      } else {
+        setTransactions([]);
+      }
+    } catch {
+      setTransactions([]);
+    }
+  }, [address]);
 
   const filteredTransactions = transactions.filter((tx) => {
     if (filter === 'all') return true;
@@ -101,7 +80,8 @@ export default function TransactionHistory() {
     return tx.status === 'completed';
   });
 
-  const formatTime = (date: Date) => {
+  const formatTime = (timestamp: string) => {
+    const date = new Date(timestamp);
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const minutes = Math.floor(diff / 60000);

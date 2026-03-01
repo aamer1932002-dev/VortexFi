@@ -28,14 +28,14 @@ export const TOKENS = {
   USDC: {
     address: CONTRACTS.MockUSDC,
     symbol: 'USDC',
-    name: 'Mock USDC',
+    name: 'USDC (Testnet)',
     decimals: 6,
     icon: '💵',
   },
   WETH: {
     address: CONTRACTS.MockWETH,
     symbol: 'WETH',
-    name: 'Mock WETH',
+    name: 'WETH (Testnet)',
     decimals: 18,
     icon: '💎',
   },

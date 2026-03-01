@@ -2,7 +2,8 @@
 
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, Zap, Shield, Globe, TrendingUp, Sparkles } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useTotalTVL, useZapStats, useLPTotalSupply } from '@/hooks/useContracts';
+import { formatAmount, VAULTS } from '@/lib/config';
 
 const floatingChains = [
   { name: 'Ethereum', color: '#627EEA', delay: 0 },
@@ -12,30 +13,26 @@ const floatingChains = [
   { name: 'Base', color: '#0052FF', delay: 0.8 },
 ];
 
-const stats = [
-  { value: '$43.7M', label: 'Total Value Locked' },
-  { value: '12.5%', label: 'Average APY' },
-  { value: '15,000+', label: 'Active Users' },
-  { value: '<30s', label: 'Bridge Time' },
-];
-
 export function Hero() {
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 500], [0, 150]);
   const opacity = useTransform(scrollY, [0, 300], [1, 0]);
   const scale = useTransform(scrollY, [0, 300], [1, 0.95]);
 
-  const [currentAPY, setCurrentAPY] = useState(12.5);
+  const { totalTvlUsd, isLoading: tvlLoading } = useTotalTVL();
+  const { stats: zapStats, isLoading: statsLoading } = useZapStats();
+  const { totalSupply, isLoading: supplyLoading } = useLPTotalSupply();
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentAPY(prev => {
-        const change = (Math.random() - 0.5) * 0.2;
-        return Math.max(8, Math.min(18, prev + change));
-      });
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
+  const isLoading = tvlLoading || statsLoading || supplyLoading;
+
+  const avgAPY = (VAULTS.reduce((sum, v) => sum + v.apy, 0) / VAULTS.length).toFixed(1);
+
+  const stats = [
+    { value: isLoading ? '...' : `$${formatAmount(totalTvlUsd)}`, label: 'Total Value Locked' },
+    { value: `${avgAPY}%`, label: 'Average APY' },
+    { value: isLoading ? '...' : (zapStats?.totalZaps.toString() || '0'), label: 'Total Zaps' },
+    { value: '<30s', label: 'Bridge Time' },
+  ];
 
   return (
     <section className="relative min-h-screen flex items-center justify-center pt-32 pb-20 overflow-hidden">
@@ -242,12 +239,12 @@ export function Hero() {
                     initial={{ scale: 1 }}
                     whileHover={{ scale: 1.05 }}
                   >
-                    {stat.label === 'Average APY' ? `${currentAPY.toFixed(1)}%` : stat.value}
+                    {stat.value}
                   </motion.div>
                   <div className="text-sm text-gray-500 mt-1">{stat.label}</div>
                   
                   {/* Live indicator for APY */}
-                  {stat.label === 'Average APY' && (
+                  {stat.label === 'Total Value Locked' && (
                     <motion.div
                       className="absolute top-4 right-4 flex items-center gap-1"
                       animate={{ opacity: [1, 0.5, 1] }}
@@ -271,7 +268,7 @@ export function Hero() {
           >
             <div className="flex items-center gap-2">
               <Shield className="w-5 h-5 text-green-400" />
-              <span className="text-sm">Audited by Certik</span>
+              <span className="text-sm">Verified Contracts</span>
             </div>
             <div className="flex items-center gap-2">
               <Globe className="w-5 h-5 text-blue-400" />

@@ -75,7 +75,7 @@ export function VaultGrid() {
   });
 
   // Calculate TVL per vault (split evenly for demo)
-  const tvlPerVault = totalTvlUsd / VAULTS.length;
+  // const tvlPerVault = totalTvlUsd / VAULTS.length;  // removed - show total pool TVL
 
   return (
     <section id="vaults" className="py-24 relative overflow-hidden">
@@ -240,8 +240,9 @@ export function VaultGrid() {
                       <div className="p-3 bg-black/20 rounded-xl text-center">
                         <p className="text-xs text-gray-500 mb-1">TVL</p>
                         <p className="text-lg font-bold text-white">
-                          ${tvlLoading ? '...' : formatAmount(tvlPerVault)}
+                          ${tvlLoading ? '...' : formatAmount(totalTvlUsd)}
                         </p>
+                        <p className="text-[10px] text-gray-600 mt-0.5">total pool</p>
                       </div>
                     </div>
 

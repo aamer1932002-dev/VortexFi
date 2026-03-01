@@ -6,6 +6,7 @@ import { X, ArrowRight, Loader2, CheckCircle2, AlertCircle, Zap, Shield, Externa
 import { useAccount } from 'wagmi';
 import { parseUnits } from 'viem';
 import { ZapProgress } from '@/components/ui/ZapProgress';
+import { saveTransaction } from '@/components/TransactionHistory';
 import { CONTRACTS, TOKENS, getTxExplorerUrl, type Vault } from '@/lib/config';
 
 // Token type definition
@@ -124,6 +125,19 @@ export function VaultModal({ vault, onClose }: VaultModalProps) {
     if (isDepositSuccess && depositHash) {
       setTxHash(depositHash);
       setStep('success');
+      // Save real transaction to localStorage
+      saveTransaction({
+        type: 'deposit',
+        status: 'completed',
+        sourceChain: 'Polygon Amoy',
+        destChain: 'Polygon Amoy',
+        token: vault.token,
+        amount,
+        vault: vault.name,
+        txHash: depositHash,
+        lpReceived: estimatedLP,
+        walletAddress: address,
+      });
       // Refetch balances
       refetchUsdc();
       refetchWeth();
