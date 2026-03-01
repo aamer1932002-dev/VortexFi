@@ -12,7 +12,7 @@ const navLinks = [
   { name: 'Portfolio', href: '/portfolio' },
   { name: 'History', href: '/history' },
   { name: 'How it Works', href: '/how-it-works' },
-  { name: 'Docs', href: 'https://docs.vortexfi.io', external: true },
+  { name: 'Docs', href: '/docs', external: false },
 ];
 
 export function Header() {

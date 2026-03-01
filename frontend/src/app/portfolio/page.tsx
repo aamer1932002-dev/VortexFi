@@ -5,40 +5,60 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import Portfolio from '@/components/Portfolio';
 import { ParticleBackground } from '@/components/effects/ParticleBackground';
-import { PieChart, TrendingUp, Wallet, ArrowUpRight, ArrowDownRight, DollarSign } from 'lucide-react';
-
-const portfolioStats = [
-  { 
-    label: 'Total Balance', 
-    value: '$12,847.32', 
-    change: '+12.4%', 
-    isPositive: true,
-    icon: DollarSign 
-  },
-  { 
-    label: 'Total Deposited', 
-    value: '$10,500.00', 
-    change: '+$2,500', 
-    isPositive: true,
-    icon: ArrowDownRight 
-  },
-  { 
-    label: 'Total Earnings', 
-    value: '$2,347.32', 
-    change: '+22.3%', 
-    isPositive: true,
-    icon: TrendingUp 
-  },
-  { 
-    label: 'Active Positions', 
-    value: '7', 
-    change: '+2 this week', 
-    isPositive: true,
-    icon: Wallet 
-  },
-];
+import { PieChart, TrendingUp, Wallet, ArrowUpRight, DollarSign } from 'lucide-react';
+import { useUSDCBalance, useWETHBalance, useLPBalance, useUserDeposits } from '@/hooks/useContracts';
+import { useAccount } from 'wagmi';
 
 export default function PortfolioPage() {
+  const { isConnected } = useAccount();
+  const { balance: usdcBalance, isLoading: usdcLoading } = useUSDCBalance();
+  const { balance: wethBalance, isLoading: wethLoading } = useWETHBalance();
+  const { balance: lpBalance, isLoading: lpLoading } = useLPBalance();
+  const { deposits: userDeposits, isLoading: depositsLoading } = useUserDeposits();
+
+  const isLoading = usdcLoading || wethLoading || lpLoading || depositsLoading;
+
+  const usdc = parseFloat(usdcBalance) || 0;
+  const weth = parseFloat(wethBalance) || 0;
+  const lp   = parseFloat(lpBalance)   || 0;
+  const deposited = parseFloat(userDeposits) || 0;
+
+  // Rough USD total: USDC at $1, WETH at $2000, LP tokens at $1 each
+  const totalBalance = usdc + weth * 2000 + lp;
+  const earnings = Math.max(0, totalBalance - deposited);
+
+  // Count non-zero token balances as "active positions"
+  const activePositions = (usdc > 0 ? 1 : 0) + (weth > 0 ? 1 : 0) + (lp > 0 ? 1 : 0);
+
+  const fmt = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const portfolioStats = [
+    {
+      label: 'Total Balance',
+      value: isLoading || !isConnected ? '—' : `$${fmt(totalBalance)}`,
+      change: 'Live from chain',
+      icon: DollarSign,
+    },
+    {
+      label: 'Total Deposited',
+      value: isLoading || !isConnected ? '—' : `$${fmt(deposited)}`,
+      change: 'Pool deposits',
+      icon: TrendingUp,
+    },
+    {
+      label: 'Total Earnings',
+      value: isLoading || !isConnected ? '—' : `$${fmt(earnings)}`,
+      change: 'Est. yield',
+      icon: ArrowUpRight,
+    },
+    {
+      label: 'Active Positions',
+      value: isLoading || !isConnected ? '—' : String(activePositions),
+      change: 'Tokens held',
+      icon: Wallet,
+    },
+  ];
+
   return (
     <main className="relative min-h-screen overflow-hidden">
       {/* Background Effects */}
@@ -99,8 +119,8 @@ export default function PortfolioPage() {
                     <div className="relative">
                       <div className="flex items-center justify-between mb-3">
                         <stat.icon className="w-5 h-5 text-cyan-400" />
-                        <div className={`flex items-center gap-1 text-xs font-medium ${stat.isPositive ? 'text-green-400' : 'text-red-400'}`}>
-                          {stat.isPositive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                        <div className="flex items-center gap-1 text-xs font-medium text-green-400">
+                          <ArrowUpRight className="w-3 h-3" />
                           {stat.change}
                         </div>
                       </div>
