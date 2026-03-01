@@ -2,6 +2,7 @@
 
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, Zap, Shield, Globe, TrendingUp, Sparkles } from 'lucide-react';
+import Link from 'next/link';
 import { useTotalTVL, useZapStats, useLPTotalSupply } from '@/hooks/useContracts';
 import { formatAmount, VAULTS } from '@/lib/config';
 
@@ -182,37 +183,41 @@ export function Hero() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
           >
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="group relative px-8 py-4 rounded-2xl font-semibold text-white text-lg overflow-hidden"
-            >
-              {/* Animated gradient background */}
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600"
-                animate={{
-                  backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-                }}
-                transition={{ duration: 5, repeat: Infinity, ease: 'linear' }}
-                style={{ backgroundSize: '200% 200%' }}
-              />
-              {/* Glow */}
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 blur-xl opacity-50 group-hover:opacity-75 transition-opacity" />
-              {/* Content */}
-              <span className="relative z-10 flex items-center gap-2">
-                <Zap className="w-5 h-5" />
-                Start Earning
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </span>
-            </motion.button>
+            <Link href="/vaults">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="group relative px-8 py-4 rounded-2xl font-semibold text-white text-lg overflow-hidden"
+              >
+                {/* Animated gradient background */}
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600"
+                  animate={{
+                    backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                  }}
+                  transition={{ duration: 5, repeat: Infinity, ease: 'linear' }}
+                  style={{ backgroundSize: '200% 200%' }}
+                />
+                {/* Glow */}
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 blur-xl opacity-50 group-hover:opacity-75 transition-opacity" />
+                {/* Content */}
+                <span className="relative z-10 flex items-center gap-2">
+                  <Zap className="w-5 h-5" />
+                  Start Earning
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </span>
+              </motion.button>
+            </Link>
 
-            <motion.button
-              whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.1)' }}
-              whileTap={{ scale: 0.98 }}
-              className="px-8 py-4 rounded-2xl font-semibold text-white text-lg border border-white/20 backdrop-blur-sm transition-colors"
-            >
-              View Vaults
-            </motion.button>
+            <Link href="/vaults">
+              <motion.button
+                whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.1)' }}
+                whileTap={{ scale: 0.98 }}
+                className="px-8 py-4 rounded-2xl font-semibold text-white text-lg border border-white/20 backdrop-blur-sm transition-colors"
+              >
+                View Vaults
+              </motion.button>
+            </Link>
           </motion.div>
 
           {/* Live Stats Bar */}
